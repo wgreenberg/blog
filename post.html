@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Arcs Dice Blog</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="includes/style.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Arcs Dice Blog</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#a-simpler-case" id="toc-a-simpler-case">A simpler
+case</a></li>
+<li><a href="#generating-functions-a-prelude"
+id="toc-generating-functions-a-prelude">Generating functions: a
+prelude</a></li>
+<li><a href="#discovering-our-generating-function"
+id="toc-discovering-our-generating-function">Discovering our generating
+function</a></li>
+<li><a href="#an-interlude-on-x" id="toc-an-interlude-on-x">An interlude
+on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math></a></li>
+<li><a href="#non-standard-dice" id="toc-non-standard-dice">Non-standard
+dice</a></li>
+<li><a href="#arcs" id="toc-arcs">Arcs!</a></li>
+</ul>
+</nav>
+<p>I’ve recently gotten very into Leder Games/Cole Wherle’s newest board
+game, Arcs. It’s a scrappy, clever game about clashing space empires,
+and it’s chock full of deliciously thorny mechanics that lead to
+interesting decisionmaking.</p>
+<p>One of these mechanics is its system of building dice pools. Whenever
+you send your ships into combat in Arcs, you assemble a dice pool of one
+die per ship, and resolve the combat in a single roll. What makes this
+such an interesting bit of decisionmaking is the different types of dice
+you can pull from for your pool:</p>
+<figure>
+<img src="images/arcs/dice-stolen.jpg"
+alt="Arcs’ Assault, Raid, and Skirmish dice" />
+<figcaption aria-hidden="true">Arcs’ Assault, Raid, and Skirmish
+dice</figcaption>
+</figure>
+<p>Each die has a different utility and risk profile: blue Skirmish dice
+are basically a coin flip for whether you’ll do damage, but carry no
+risk of harming your own ships. The red Assault dice do considerably
+more damage to the enemy, but with a higher chance of blowing up your
+fleet. And the orange Raid dice carry the most risk of self-damage, as
+well as chances of blowing up enemy buildings (which can be good or
+bad), but importantly are the only dice which let you roll keys, the
+game’s way of stealing resources and other goodies.</p>
+<p>Building your dice pool is an exercise in risk management: how many
+of your own ships can you afford to blow up to get what you want? With
+with the exception of blue Skirmish dice, the symbols are unevenly
+allocated over the faces of each die, making for some dramatic dice
+rolls.</p>
+<p>Now to be clear, I don’t think Cole Wherle intended players to
+perform exacting calculations of the odds for every dice pool. The gist
+of the mechanic is that one die is safe, one is risky, and one is
+<em>real risky</em>, so plan accordingly.</p>
+<p>But as a fan of recreational math, I got to wondering: <strong>given
+any assortment of Skirmish, Assault, and Raid dice, what are the odds of
+rolling any given outcome?</strong> And as it turns out, what I thought
+would be a fairly dreadful brute-force statistics problem actually led
+to some elegant math in unexpected places.</p>
+<h2 id="a-simpler-case">A simpler case</h2>
+<p>To start with, let’s analyze the case of rolling a pool of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+standard six-sided dice and adding up the values. We can consider each
+die to be a <strong>discrete random variable</strong>, which means
+something whose value is randomly determined from a discrete set of
+values. In this case, those values are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>,</mo><mn>4</mn><mo>,</mo><mn>5</mn><mo>,</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">{1, 2, 3, 4, 5, 6}</annotation></semantics></math>,
+i.e. the number of pips on each die face. Let’s call that random
+variable
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>
+for die.</p>
+<p>Next, we’d try to model a single roll of this dice pool, which is
+just the sum of all the random die variables. Since we have
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+dice, let’s call the roll
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mi>n</mi></msub><annotation encoding="application/x-tex">R_n</annotation></semantics></math>,
+and thus
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mi>n</mi></msub><mo>=</mo><msub><mi>D</mi><mn>1</mn></msub><mo>+</mo><msub><mi>D</mi><mn>2</mn></msub><mo>+</mo><mi>.</mi><mi>.</mi><mi>.</mi><mo>+</mo><msub><mi>D</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">R_n = D_1 + D_2 + ... + D_n</annotation></semantics></math>.</p>
+Now, we can finally ask a question like “when rolling 4 dice, what are
+the odds of rolling a 7?” Or, in a more mathy parlance, what is the
+value of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mi>n</mi></msub><annotation encoding="application/x-tex">R_n</annotation></semantics></math>’s
+<a
+href="https://en.wikipedia.org/wiki/Probability_mass_function"><strong>probability
+mass function</strong> (PMF)</a>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>R</mi><mi>n</mi></msub><mo>=</mo><mn>7</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">P(R_n = 7)</annotation></semantics></math>?
+<aside>
+Probability mass functions are (in my opinion) terribly named owing to a
+tortured metaphor of probability “densities”, but conceptually they’re
+actually really simple: they’re just functions which return the
+probability of getting a value for a given discrete random variable. For
+example, for a single die, the function is just
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><annotation encoding="application/x-tex">\dfrac{1}{6}</annotation></semantics></math>
+for all values.
+</aside>
+<p>The problem, of course, is we don’t know what the PMF is yet, so we
+can’t evaluate it at anything!</p>
+<p>There’s a few ways we can go about calculating the PMF. Grant
+Sanderson (aka 3Blue1Brown) has a fantastic <a
+href="https://www.youtube.com/watch?v=KuXjwB4LzSA">video on
+convolutions</a> which visualizes some of them, but the approach we’ll
+be taking here is considerably <em>quirkier</em>.</p>
+<h2 id="generating-functions-a-prelude">Generating functions: a
+prelude</h2>
+<p>To spoil the ending a bit, we’ll be using things called <a
+href="https://en.wikipedia.org/wiki/Generating_function"><strong>generating
+functions</strong></a> to analyze these dice pool distributions. But I
+have to admit, when I first learned this approach, it felt <em>extremely
+bizarre</em>. Generating functions can often seem like total
+non-sequiters in their applications, and if you’ve never dealt with them
+before, my goal in this post is to motivate their usage from first
+principles, and explain why they’re a great fit for this kind of
+problem. But to quote <a
+href="https://www.youtube.com/watch?v=bOXCLR3Wric">another Grant
+Sanderson video</a>, “there’s a time in your life before you understand
+generating functions, and a time after, and I can’t think of anything
+that connects them other than a leap of faith.”</p>
+<p>Back to our roll of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+dice and its result,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mi>n</mi></msub><annotation encoding="application/x-tex">R_n</annotation></semantics></math>.
+To make things a bit more simple, let’s consider the case of two dice
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mn>2</mn></msub><annotation encoding="application/x-tex">R_2</annotation></semantics></math>),
+and write down all of 36 possible sums of the two rolls:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"><strong>1</strong></th>
+<th style="text-align: center;"><strong>2</strong></th>
+<th style="text-align: center;"><strong>3</strong></th>
+<th style="text-align: center;"><strong>4</strong></th>
+<th style="text-align: center;"><strong>5</strong></th>
+<th style="text-align: center;"><strong>6</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><strong>1</strong></td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">7</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>2</strong></td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">8</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>3</strong></td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">9</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>4</strong></td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">9</td>
+<td style="text-align: center;">10</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>5</strong></td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">9</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">11</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>6</strong></td>
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">9</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">11</td>
+<td style="text-align: center;">12</td>
+</tr>
+</tbody>
+</table>
+<p>As expected,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>2</mn><annotation encoding="application/x-tex">2</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>12</mn><annotation encoding="application/x-tex">12</annotation></semantics></math>
+occur just once to account for the unique rolls (1, 1) and (6, 6) that
+produce them, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>7</mn><annotation encoding="application/x-tex">7</annotation></semantics></math>
+is the most frequent outcome. Since each individual cell of this chart
+has a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mo>*</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mo>=</mo><mfrac displaystyle="true"><mn>1</mn><mn>36</mn></mfrac></mrow><annotation encoding="application/x-tex">\dfrac{1}{6} * \dfrac{1}{6} = \dfrac{1}{36}</annotation></semantics></math>
+chance of occurring, we can simply multiply the number of occurrence of
+each value by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>1</mn><mn>36</mn></mfrac><annotation encoding="application/x-tex">\dfrac{1}{36}</annotation></semantics></math>
+to get the probability of that outcome:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Outcome</th>
+<th style="text-align: center;"># Occurrences</th>
+<th style="text-align: center;">Probability</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">1</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>1</mn><mn>36</mn></mfrac><annotation encoding="application/x-tex">\dfrac{1}{36}</annotation></semantics></math></td>
+</tr>
+<tr>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>2</mn><mn>36</mn></mfrac><annotation encoding="application/x-tex">\dfrac{2}{36}</annotation></semantics></math></td>
+</tr>
+<tr>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">3</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>3</mn><mn>36</mn></mfrac><annotation encoding="application/x-tex">\dfrac{3}{36}</annotation></semantics></math></td>
+</tr>
+<tr>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">4</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>4</mn><mn>36</mn></mfrac><annotation encoding="application/x-tex">\dfrac{4}{36}</annotation></semantics></math></td>
+</tr>
+<tr>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">5</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>5</mn><mn>36</mn></mfrac><annotation encoding="application/x-tex">\dfrac{5}{36}</annotation></semantics></math></td>
+</tr>
+<tr>
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">6</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>6</mn><mn>36</mn></mfrac><annotation encoding="application/x-tex">\dfrac{6}{36}</annotation></semantics></math></td>
+</tr>
+<tr>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">5</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>5</mn><mn>36</mn></mfrac><annotation encoding="application/x-tex">\dfrac{5}{36}</annotation></semantics></math></td>
+</tr>
+<tr>
+<td style="text-align: center;">9</td>
+<td style="text-align: center;">4</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>4</mn><mn>36</mn></mfrac><annotation encoding="application/x-tex">\dfrac{4}{36}</annotation></semantics></math></td>
+</tr>
+<tr>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">3</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>3</mn><mn>36</mn></mfrac><annotation encoding="application/x-tex">\dfrac{3}{36}</annotation></semantics></math></td>
+</tr>
+<tr>
+<td style="text-align: center;">11</td>
+<td style="text-align: center;">2</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>2</mn><mn>36</mn></mfrac><annotation encoding="application/x-tex">\dfrac{2}{36}</annotation></semantics></math></td>
+</tr>
+<tr>
+<td style="text-align: center;">12</td>
+<td style="text-align: center;">1</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>1</mn><mn>36</mn></mfrac><annotation encoding="application/x-tex">\dfrac{1}{36}</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+<p>And hey, just like that we’ve just built a PMF! To calculate the
+probability of some roll, just look up the outcome and read out its
+corresponding probability.</p>
+<p>Before we proceed, let’s take a step back and generalize the steps we
+took here. For ease of reference, I’m also going to give each step a
+name:</p>
+<ol type="1">
+<li><strong>Enumeration</strong>: Given the faces on each die, we
+enumerated the collection of all possible rolls</li>
+<li><strong>Combination</strong>: For each possible combination of rolls
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mn>1</mn></msub><mo>=</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">D_1 = a</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mn>2</mn></msub><mo>=</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">D_2 = b</annotation></semantics></math>:
+<ol type="a">
+<li>We calculated the outcome’s value:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>+</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">a + b</annotation></semantics></math></li>
+<li>We calculated the outcome’s probability:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>D</mi><mn>1</mn></msub><mo>=</mo><mi>a</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>*</mo><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>D</mi><mn>2</mn></msub><mo>=</mo><mi>b</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">P(D_1 = a) * P(D_2 = b)</annotation></semantics></math>
+(which in our example was just
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mo>*</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac></mrow><annotation encoding="application/x-tex">\dfrac{1}{6} * \dfrac{1}{6}</annotation></semantics></math>,
+but worth writing out for later)</li>
+</ol></li>
+<li><strong>Consolidation</strong>: We added together the probabilities
+of all rolls with equivalent outcomes</li>
+</ol>
+<p>Now for the leap of faith. Suppose we wanted a nice, compact,
+closed-form equation that performs each of these three steps. Luckily,
+that’s exactly what generating functions allow us to do, though it’s not
+so clear from the outset <em>how</em> they manage to do it.</p>
+<h2 id="discovering-our-generating-function">Discovering our generating
+function</h2>
+<p>Instead of diving into generating functions head-first, let’s
+approach them a bit more cautiously, and see if we can stumble across
+one just by trying to design a process that reproduces the 3 above
+steps: <strong>Enumeration</strong>, <strong>Combination</strong>, and
+<strong>Consolidation</strong>. For the rest of this section, we’ll be
+considering the rolls of two standard six-sided dice,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mn>1</mn></msub><annotation encoding="application/x-tex">D_1</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mn>2</mn></msub><annotation encoding="application/x-tex">D_2</annotation></semantics></math>.</p>
+<p>First off, <strong>Enumeration</strong>. What we’re basically looking
+for is something called a <a
+href="https://en.wikipedia.org/wiki/Cartesian_product">Cartesian
+product</a> of both die’s set of face values. This would give us all
+possible pairs of faces from the two dice. One idea that might occur to
+us is that regular old multiplication can do something like this, which
+many of us learned as FOIL (First, Out, Inner, Last):</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>A</mi><mo>+</mo><mi>B</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>*</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>C</mi><mo>+</mo><mi>D</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>A</mi><mi>C</mi><mo>+</mo><mi>A</mi><mi>D</mi><mo>+</mo><mi>B</mi><mi>C</mi><mo>+</mo><mi>B</mi><mi>D</mi></mrow><annotation encoding="application/x-tex">(A + B) * (C + D) = AC + AD + BC + BD</annotation></semantics></math></p>
+<p>So if we could somehow encode each die as a sum of
+<em>somethings</em> representing each face, then multiplying those two
+sums together would give us a giant FOIL’d sum representing every
+combination of dice faces. For example if we say
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mn>1</mn></msub><annotation encoding="application/x-tex">D_1</annotation></semantics></math>’s
+<em>somethings</em> are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mn>1</mn></msub><mo>=</mo><msub><mi>a</mi><mn>1</mn></msub><mo>+</mo><msub><mi>a</mi><mn>2</mn></msub><mo>+</mo><msub><mi>a</mi><mn>3</mn></msub><mo>+</mo><msub><mi>a</mi><mn>4</mn></msub><mo>+</mo><msub><mi>a</mi><mn>5</mn></msub><mo>+</mo><msub><mi>a</mi><mn>6</mn></msub></mrow><annotation encoding="application/x-tex">D_1 = a_1 + a_2 + a_3 + a_4 + a_5 + a_6</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mn>2</mn></msub><annotation encoding="application/x-tex">D_2</annotation></semantics></math>’s
+are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mn>2</mn></msub><mo>=</mo><msub><mi>b</mi><mn>1</mn></msub><mo>+</mo><msub><mi>b</mi><mn>2</mn></msub><mo>+</mo><msub><mi>b</mi><mn>3</mn></msub><mo>+</mo><msub><mi>b</mi><mn>4</mn></msub><mo>+</mo><msub><mi>b</mi><mn>5</mn></msub><mo>+</mo><msub><mi>b</mi><mn>6</mn></msub></mrow><annotation encoding="application/x-tex">D_2 = b_1 + b_2 + b_3 + b_4 + b_5 + b_6</annotation></semantics></math>,
+then:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mn>1</mn></msub><mo>*</mo><msub><mi>D</mi><mn>2</mn></msub><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>a</mi><mn>1</mn></msub><mo>+</mo><mi>.</mi><mi>.</mi><mi>.</mi><mo>+</mo><msub><mi>a</mi><mn>6</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>*</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>b</mi><mn>1</mn></msub><mo>+</mo><mi>.</mi><mi>.</mi><mi>.</mi><mo>+</mo><msub><mi>b</mi><mn>6</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msub><mi>a</mi><mn>1</mn></msub><mo>*</mo><msub><mi>b</mi><mn>1</mn></msub><mo>+</mo><msub><mi>a</mi><mn>1</mn></msub><mo>*</mo><msub><mi>b</mi><mn>2</mn></msub><mo>+</mo><mi>.</mi><mi>.</mi><mi>.</mi></mrow><annotation encoding="application/x-tex"> D_1 * D_2 = (a_1 + ... + a_6) * (b_1 + ... + b_6) = a_1 * b_1 + a_1 * b_2 + ...</annotation></semantics></math></p>
+<p>would give us all combinations of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>’s
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>’s.
+But simply setting those <em>somethings</em> to be the face values
+(e.g. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mn>1</mn></msub><mo>=</mo><mn>1</mn><mo>+</mo><mn>2</mn><mo>+</mo><mn>3</mn><mo>+</mo><mi>.</mi><mi>.</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">D_1 = 1 + 2 + 3 + ...</annotation></semantics></math>)
+clearly wouldn’t work, since we’d just up with the product of two
+numbers. What else might work?</p>
+<p>Well, whatever those <em>somethings</em> are, we know we’re going to
+be multiplying them together, so let’s recall what we want from our
+<strong>Combination</strong> step: the product of two faces should
+somehow a) add the face values, and b) multiply their respective
+probabilities. At first, this might seem like something that could only
+be done in two separate operations. But suppose we encode two outcomes,
+say
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mn>1</mn></msub><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">D_1 = 2</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mn>2</mn></msub><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">D_2 = 6</annotation></semantics></math>,
+like this:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mn>1</mn></msub><mo>=</mo><mn>2</mn><mspace width="2.0em"></mspace><mo>⟹</mo><mspace width="2.0em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>*</mo><msup><mi>x</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex"> D_1 = 2 \qquad \implies \qquad (\dfrac{1}{6}) * x^2</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mn>2</mn></msub><mo>=</mo><mn>6</mn><mspace width="2.0em"></mspace><mo>⟹</mo><mspace width="2.0em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>*</mo><msup><mi>x</mi><mn>6</mn></msup></mrow><annotation encoding="application/x-tex"> D_2 = 6 \qquad \implies \qquad (\dfrac{1}{6}) * x^6</annotation></semantics></math></p>
+<p>What we’ve done here is take the probability of rolling each outcome
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><annotation encoding="application/x-tex">\dfrac{1}{6}</annotation></semantics></math>),
+and set it as the coefficient of a single-term polynomial whose degree
+is equal to the face’s value. Why would we possibly do that? Let’s see
+what happens when we multiply them together:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><msup><mi>x</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>*</mo><mrow><mo stretchy="true" form="prefix">(</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><msup><mi>x</mi><mn>6</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>*</mo><mrow><mo stretchy="true" form="prefix">(</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>*</mo><msup><mi>x</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>2</mn><mo>+</mo><mn>6</mn><mo stretchy="true" form="postfix">)</mo></mrow></msup><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mfrac displaystyle="true"><mn>1</mn><mn>36</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>*</mo><msup><mi>x</mi><mn>8</mn></msup></mrow><annotation encoding="application/x-tex">(\dfrac{1}{6}x^2) * (\dfrac{1}{6}x^6) = (\dfrac{1}{6}) * (\dfrac{1}{6}) * x^(2 + 6) = (\dfrac{1}{36}) * x^8</annotation></semantics></math></p>
+<p>Sure enough, we arrive at a new single-term polynomial whose
+coefficient is the probability of the two-dice outcome, and whose degree
+is equal to the sum of the two rolls. We’ve taken advantage of the
+unique property that exponents are added when their bases are multiplied
+to arrive at <strong>Combination</strong>’s second property, while also
+multiplying the probability coefficients to get the first property.
+Pretty convenient!</p>
+<p>For the final step, <strong>Consolidation</strong>, we’d like to add
+up the probabilities of all outcomes with equivalent values. Luckily
+enough, our polynomial-based encoding scheme handles this for us
+automatically, since any outcomes with matching degrees will add
+together naturally:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mn>1</mn></msub><msup><mi>x</mi><mi>a</mi></msup><mo>+</mo><msub><mi>p</mi><mn>2</mn></msub><msup><mi>x</mi><mi>a</mi></msup><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>p</mi><mn>1</mn></msub><mo>+</mo><msub><mi>p</mi><mn>2</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><msup><mi>x</mi><mi>a</mi></msup></mrow><annotation encoding="application/x-tex">p_1x^a + p_2x^a = (p_1 + p_2)x^a</annotation></semantics></math></p>
+<p>Now we can start putting the pieces together. Since all faces
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>
+through
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>6</mn><annotation encoding="application/x-tex">6</annotation></semantics></math>
+of a standard six-sided die have an equal chance of being rolled, it can
+be described by the polynomial:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><msup><mi>x</mi><mn>1</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><msup><mi>x</mi><mn>3</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><msup><mi>x</mi><mn>4</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><msup><mi>x</mi><mn>5</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><msup><mi>x</mi><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">f(x) = \dfrac{1}{6}x^1 + \dfrac{1}{6}x^2 + \dfrac{1}{6}x^3 + \dfrac{1}{6}x^4 + \dfrac{1}{6}x^5 + \dfrac{1}{6}x^6</annotation></semantics></math></p>
+<p>This is called a <strong>generating function</strong>, and although
+it seems odd to bring this seemingly unrelated polynomial into our
+problem, remember that we’re just using it to associate probabilities to
+outcomes. And since, as we’ve seen, multiplying polynomials reproduces
+our 3 steps, if we multiply
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">f(x)</annotation></semantics></math>
+by itself we should arrive at a generating function that encodes the
+probability distribution of rolling two dice:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>*</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msup><mi>f</mi><mn>2</mn></msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac displaystyle="true"><mn>1</mn><mn>36</mn></mfrac><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>2</mn><mn>36</mn></mfrac><msup><mi>x</mi><mn>3</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>3</mn><mn>36</mn></mfrac><msup><mi>x</mi><mn>4</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>4</mn><mn>36</mn></mfrac><msup><mi>x</mi><mn>5</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>5</mn><mn>36</mn></mfrac><msup><mi>x</mi><mn>6</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>6</mn><mn>36</mn></mfrac><msup><mi>x</mi><mn>7</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>5</mn><mn>36</mn></mfrac><msup><mi>x</mi><mn>8</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>4</mn><mn>36</mn></mfrac><msup><mi>x</mi><mn>9</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>3</mn><mn>36</mn></mfrac><msup><mi>x</mi><mn>10</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>2</mn><mn>36</mn></mfrac><msup><mi>x</mi><mn>11</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>36</mn></mfrac><msup><mi>x</mi><mn>12</mn></msup></mrow><annotation encoding="application/x-tex">f(x) * f(x) = f^2(x) = \dfrac{1}{36}x^2 + \dfrac{2}{36}x^3 + \dfrac{3}{36}x^4 + \dfrac{4}{36}x^5 + \dfrac{5}{36}x^6 + \dfrac{6}{36}x^7 + \dfrac{5}{36}x^8 + \dfrac{4}{36}x^9 + \dfrac{3}{36}x^10 + \dfrac{2}{36}x^11 + \dfrac{1}{36}x^12</annotation></semantics></math></p>
+<p>If we match each exponent-value with the outcome/probability table
+above, we’ll find that all of the coefficients indeed match the expected
+probabilities. Moreover, by multiplying our generating function together
+repeatedly, we can arrive at a compact, closed-form description for an
+arbitrarily sized dice pool. And so, at last, we can derive the PMF for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mi>n</mi></msub><annotation encoding="application/x-tex">R_n</annotation></semantics></math>
+simply by calculating
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>f</mi><mi>n</mi></msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">f^n(x)</annotation></semantics></math>.</p>
+<h2 id="an-interlude-on-x">An interlude on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math></h2>
+<p>“Cool functions”, I can hear you saying, “but what are they functions
+<em>of</em>?” And you’re right to be leery. If the coefficients of our
+function represent probabilities, and the exponents represent dice
+faces, what meaning does
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>
+have?</p>
+<p>Well in short, it’s just a symbol. When generating a PMF, we’re not
+actually evaluating our generating functions
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">f(x)</annotation></semantics></math>
+for any values of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>.
+As Herbert Wilf said in the excellent <a
+href="https://www2.math.upenn.edu/~wilf/DownldGF.html"><em>generatingfunctionology</em></a>,
+“a generating function is a clothesline on which we hang up a sequence
+of numbers for display”. The coefficients of these functions are the
+sequence we’re interested in displaying, not the values of the function
+itself.</p>
+<p>That said, you can definitely treat these critters like real
+functions and arrive at some really neat insights into your subject. One
+basic example of this would be to evaluate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">f(1)</annotation></semantics></math>,
+which for our generating function above would simply equal the sum of
+the coefficients (a.k.a. probabilities). And since all probabilities in
+a distribution must add to equal
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>,
+we know that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">f(1) = 1</annotation></semantics></math>.</p>
+<p>A more interesting example of this would be
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">f(-1)</annotation></semantics></math>.
+What do you think this might do? Well,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mi>n</mi></msup><annotation encoding="application/x-tex">(-1)^n</annotation></semantics></math>
+for even powers of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+is just
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>,
+and for odd powers it’s
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math>,
+so we end up with:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mo>*</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mo>*</mo><mn>1</mn><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mo>*</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mo>*</mo><mn>1</mn><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mo>*</mo><mi>−</mi><mn>1</mn><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mo>*</mo><mn>1</mn><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">f(-1) = \dfrac{1}{6} * (-1) + \dfrac{1}{6} * 1 + \dfrac{1}{6} * (-1) + \dfrac{1}{6} * 1 + \dfrac{1}{6} * -1 + \dfrac{1}{6} * 1 = 0</annotation></semantics></math></p>
+<p>In other words, it subtracts the probability of rolling an odd face
+from the probability of rolling an even face. In our case, this
+obviously cancels out to 0, since a 6 sided die has an equal number of
+even and odd faces. But it also tells us that rolling <em>any</em>
+number of standard six-sided dice and adding the result has an equal
+chance of giving an even or odd number, since
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>f</mi><mi>n</mi></msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>*</mo><msup><mi>f</mi><mi>n</mi></msup><mo>−</mo><mn>1</mn><mrow><mo stretchy="true" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">f^n(-1) = f(-1) * f^n-1(-1) = 0</annotation></semantics></math>.</p>
+<p>For more on this, be sure to check out Grant Sanderson’s <a
+href="https://www.youtube.com/watch?v=bOXCLR3Wric">video on generating
+functions for solving a tough puzzle</a> that I referenced above.</p>
+<h2 id="non-standard-dice">Non-standard dice</h2>
+<p>So what if we have dice with different numbers of sides, or different
+allocations of pips? Have no fear, generating functions got your back.
+Simply follow the rules of generating functions for PMFs:</p>
+<ol type="1">
+<li>The sum of all coefficients must equal 1</li>
+<li>No coefficients can be negative</li>
+</ol>
+<p>With that, let’s try creating the generating function for a 4 sided
+die with faces
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mn>3</mn><mo>,</mo><mn>7</mn><mo>,</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">{0, 3, 7, 7}</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac displaystyle="true"><mn>1</mn><mn>4</mn></mfrac><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>4</mn></mfrac><msup><mi>x</mi><mn>3</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>4</mn></mfrac><msup><mi>x</mi><mn>7</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>4</mn></mfrac><msup><mi>x</mi><mn>7</mn></msup><mo>=</mo><mfrac displaystyle="true"><mn>1</mn><mn>4</mn></mfrac><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>4</mn></mfrac><msup><mi>x</mi><mn>3</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>2</mn></mfrac><msup><mi>x</mi><mn>7</mn></msup></mrow><annotation encoding="application/x-tex">f(x) = \dfrac{1}{4} + \dfrac{1}{4}x^3 + \dfrac{1}{4}x^7 + \dfrac{1}{4}x^7 = \dfrac{1}{4} + \dfrac{1}{4}x^3 + \dfrac{1}{2}x^7</annotation></semantics></math></p>
+<p>Since we only have 4 sides, we adjust the coefficients to be
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>1</mn><mn>4</mn></mfrac><annotation encoding="application/x-tex">\dfrac{1}{4}</annotation></semantics></math>,
+and since one side has 0 pips, we straightforwardly enough assign its
+probability to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>x</mi><mn>0</mn></msup><annotation encoding="application/x-tex">x^0</annotation></semantics></math>,
+a.k.a. 1. And as you might hope, to obtain the result of rolling dice
+with different allocations of pips and different sides, you simply
+multiply their respective generating functions together.</p>
+<h2 id="arcs">Arcs!</h2>
+<p>We just need one more tool before tackling the dice in Arcs: a way of
+handling multiple <em>types</em> of pips. In Arcs, each dice can any
+number of 5 different symbols. I’ll assign each of them a letter, which
+will be useful going forward:</p>
+<table>
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 27%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: center;">Symbol</th>
+<th style="text-align: center;">Name</th>
+<th style="text-align: center;">Letter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img src="images/arcs/symbol-hit.png"
+alt="Hit symbol" /></td>
+<td style="text-align: center;">Hit</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math></td>
+</tr>
+<tr>
+<td style="text-align: center;"><img
+src="images/arcs/symbol-buildinghit-white.png"
+alt="Building hit symbol" /></td>
+<td style="text-align: center;">Building hit</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math></td>
+</tr>
+<tr>
+<td style="text-align: center;"><img
+src="images/arcs/symbol-selfhit.png" alt="Self-hit symbol" /></td>
+<td style="text-align: center;">Self-hit</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math></td>
+</tr>
+<tr>
+<td style="text-align: center;"><img
+src="images/arcs/symbol-intercept.png" alt="Intercept symbol" /></td>
+<td style="text-align: center;">Intecept</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math></td>
+</tr>
+<tr>
+<td style="text-align: center;"><img src="images/arcs/symbol-key.png"
+alt="Key symbol" /></td>
+<td style="text-align: center;">Key</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+<p>And for ease of reference, here are the layouts of each die:</p>
+<figure>
+<img src="images/arcs/dice.png"
+alt="Diagram of Arcs’ Assault, Raid, and Skirmish dice" />
+<figcaption aria-hidden="true">Diagram of Arcs’ Assault, Raid, and
+Skirmish dice</figcaption>
+</figure>
+<p>How can we represent these? One possiblity might be to create
+separate generating functions for each type of symbol appearing on each
+die. So the Assault die would have a hit function, a self-hit function,
+and an intercept function. But this approach treats the different pip
+types as independent from one another, and would fail to account for the
+fact that the 1 intercept symbol on Assault dice can only ever be paired
+with the single hit symbol.</p>
+<p>Instead, we make our generating functions <em>multivariate</em>,
+i.e. they are functions of more than one variable. In this model, we’ll
+be writing three dice functions on the five pip type variables:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>h</mi><mo>,</mo><mi>s</mi><mo>,</mo><mi>b</mi><mo>,</mo><mi>i</mi><mo>,</mo><mi>k</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">A(h, s, b, i, k)</annotation></semantics></math>
+for Assault dice,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>h</mi><mo>,</mo><mi>s</mi><mo>,</mo><mi>b</mi><mo>,</mo><mi>i</mi><mo>,</mo><mi>k</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">S(h, s, b, i, k)</annotation></semantics></math>
+for Skirmish, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>h</mi><mo>,</mo><mi>s</mi><mo>,</mo><mi>b</mi><mo>,</mo><mi>i</mi><mo>,</mo><mi>k</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">R(h, s, b, i, k)</annotation></semantics></math>
+for Raid:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><mi>A</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>h</mi><mo>,</mo><mi>s</mi><mo>,</mo><mi>b</mi><mo>,</mo><mi>i</mi><mo>,</mo><mi>k</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><msup><mi>h</mi><mn>2</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><msup><mi>h</mi><mn>2</mn></msup><mi>s</mi><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mi>h</mi><mi>i</mi><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>3</mn></mfrac><mi>h</mi><mi>s</mi></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><mi>S</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>h</mi><mo>,</mo><mi>s</mi><mo>,</mo><mi>b</mi><mo>,</mo><mi>i</mi><mo>,</mo><mi>k</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac displaystyle="true"><mn>1</mn><mn>2</mn></mfrac><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>2</mn></mfrac><mi>h</mi></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><mi>R</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>h</mi><mo>,</mo><mi>s</mi><mo>,</mo><mi>b</mi><mo>,</mo><mi>i</mi><mo>,</mo><mi>k</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mi>i</mi><msup><mi>k</mi><mn>2</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mi>h</mi><mi>k</mi><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mi>b</mi><mi>k</mi><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>3</mn></mfrac><mi>h</mi><mi>b</mi><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mi>i</mi></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{align}
+&amp;A(h, s, b, i, k) = \dfrac{1}{6} + \dfrac{1}{6}h^2 + \dfrac{1}{6}h^2s + \dfrac{1}{6}hi + \dfrac{1}{3}hs \\
+&amp;S(h, s, b, i, k) = \dfrac{1}{2} + \dfrac{1}{2}h \\
+&amp;R(h, s, b, i, k) = \dfrac{1}{6}ik^2 + \dfrac{1}{6}hk + \dfrac{1}{6}bk + \dfrac{1}{3}hb + \dfrac{1}{6}i \\
+\end{align}
+</annotation></semantics></math></p>
+<p>Note that constant values represent empty faces, and that the
+probabilities of common terms have been summed together. For brevity’s
+sake, I’ll refer to these functions by just their capital letters from
+here on out.</p>
+<p>And now we finally have a way to compute the general PMF of any given
+roll for an arbitrary Arcs dice pool: for a pool of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>
+Assault dice,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
+Skirmish dice, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>
+Raid dice, we compute
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>A</mi><mi>x</mi></msup><msup><mi>S</mi><mi>y</mi></msup><msup><mi>R</mi><mi>z</mi></msup></mrow><annotation encoding="application/x-tex">A^xS^yR^z</annotation></semantics></math>,
+and then lookup the coefficient of a given roll.</p>
+<p>Let’s try a simple example. For a pool with two Assault dice and one
+Skirmish die, we’d multiply and expand
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>A</mi><mn>2</mn></msup><msup><mi>S</mi><mn>1</mn></msup></mrow><annotation encoding="application/x-tex">A^2S^1</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right"><msup><mi>A</mi><mn>2</mn></msup><mi>S</mi></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><msup><mi>h</mi><mn>2</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><msup><mi>h</mi><mn>2</mn></msup><mi>s</mi><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>6</mn></mfrac><mi>h</mi><mi>i</mi><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>3</mn></mfrac><mi>h</mi><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mo>*</mo><mrow><mo stretchy="true" form="prefix">(</mo><mfrac displaystyle="true"><mn>1</mn><mn>2</mn></mfrac><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>2</mn></mfrac><mi>h</mi><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><mo>=</mo><mfrac displaystyle="true"><mn>1</mn><mn>72</mn></mfrac><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>72</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>h</mi><mn>5</mn></msup><msup><mi>s</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac displaystyle="true"><mn>2</mn><mn>72</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>h</mi><mn>5</mn></msup><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>72</mn></mfrac><msup><mi>h</mi><mn>5</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>2</mn><mn>72</mn></mfrac><msup><mi>h</mi><mn>4</mn></msup><mi>i</mi><mi>s</mi><mo>+</mo><mfrac displaystyle="true"><mn>2</mn><mn>72</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>h</mi><mn>4</mn></msup><mi>i</mi><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><mspace width="1.0em"></mspace><mo>+</mo><mfrac displaystyle="true"><mn>5</mn><mn>72</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>h</mi><mn>4</mn></msup><msup><mi>s</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac displaystyle="true"><mn>6</mn><mn>72</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>h</mi><mn>4</mn></msup><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>72</mn></mfrac><msup><mi>h</mi><mn>4</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>72</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>h</mi><mn>3</mn></msup><msup><mi>i</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac displaystyle="true"><mn>6</mn><mn>72</mn></mfrac><msup><mi>h</mi><mn>3</mn></msup><mi>i</mi><mi>s</mi><mo>+</mo><mfrac displaystyle="true"><mn>2</mn><mn>72</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>h</mi><mn>3</mn></msup><mi>i</mi><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><mspace width="1.0em"></mspace><mo>+</mo><mfrac displaystyle="true"><mn>8</mn><mn>72</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>h</mi><mn>3</mn></msup><msup><mi>s</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac displaystyle="true"><mn>6</mn><mn>72</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>h</mi><mn>3</mn></msup><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac displaystyle="true"><mn>2</mn><mn>72</mn></mfrac><msup><mi>h</mi><mn>3</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>72</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>h</mi><mn>2</mn></msup><msup><mi>i</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac displaystyle="true"><mn>4</mn><mn>72</mn></mfrac><msup><mi>h</mi><mn>2</mn></msup><mi>i</mi><mi>s</mi><mo>+</mo><mfrac displaystyle="true"><mn>2</mn><mn>72</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>h</mi><mn>2</mn></msup><mi>i</mi><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"></mtd><mtd columnalign="left" style="text-align: left"><mspace width="1.0em"></mspace><mo>+</mo><mfrac displaystyle="true"><mn>4</mn><mn>72</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>h</mi><mn>2</mn></msup><msup><mi>s</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac displaystyle="true"><mn>6</mn><mn>72</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>h</mi><mn>2</mn></msup><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac displaystyle="true"><mn>2</mn><mn>72</mn></mfrac><msup><mi>h</mi><mn>2</mn></msup><mo>+</mo><mfrac displaystyle="true"><mn>2</mn><mn>72</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mi>h</mi><mi>i</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac displaystyle="true"><mn>4</mn><mn>72</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mi>h</mi><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac displaystyle="true"><mn>1</mn><mn>72</mn></mfrac><mi>h</mi></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right"></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{align}
+A^2S &amp;= (\dfrac{1}{6} + \dfrac{1}{6}h^2 + \dfrac{1}{6}h^2s + \dfrac{1}{6}hi + \dfrac{1}{3}hs)^2 * (\dfrac{1}{2} + \dfrac{1}{2}h)  \\
+ &amp;= \dfrac{1}{72} + \dfrac{1}{72}(h^5 s^2) + \dfrac{2}{72}(h^5 s) + \dfrac{1}{72}h^5 + \dfrac{2}{72}h^4 i s + \dfrac{2}{72}(h^4 i) \\
+ &amp;\quad + \dfrac{5}{72}(h^4 s^2) + \dfrac{6}{72}(h^4 s) + \dfrac{1}{72}h^4 + \dfrac{1}{72}(h^3 i^2) + \dfrac{6}{72}h^3 i s + \dfrac{2}{72}(h^3 i) \\
+ &amp;\quad + \dfrac{8}{72}(h^3 s^2) + \dfrac{6}{72}(h^3 s) + \dfrac{2}{72}h^3 + \dfrac{1}{72}(h^2 i^2) + \dfrac{4}{72}h^2 i s + \dfrac{2}{72}(h^2 i) \\
+ &amp;\quad + \dfrac{4}{72}(h^2 s^2) + \dfrac{6}{72}(h^2 s) + \dfrac{2}{72}h^2 + \dfrac{2}{72}(h i) + \dfrac{4}{72}(h s) + \dfrac{1}{72}h \\
+\end{align}
+</annotation></semantics></math></p>
+<p>As you can see, our (<em>checks notes</em>) “simple” example has give
+us a pretty unweildy polynomial. But, if you wanted, you could add up
+all of the coefficients and verify they equal
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>
+(I certainly did). And although it’s a bit painful to look at, we can
+fairly easily notice a few things:</p>
+<ul>
+<li>There’s a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>1</mn><mn>72</mn></mfrac><annotation encoding="application/x-tex">\dfrac{1}{72}</annotation></semantics></math>
+chance of rolling nothing</li>
+<li>All other
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>71</mn><mn>72</mn></mfrac><annotation encoding="application/x-tex">\dfrac{71}{72}</annotation></semantics></math>
+possible outcomes include at least one Hit</li>
+<li>The most likely roll is 3 Hits, 2 Self-hits with probability
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac displaystyle="true"><mn>9</mn><mn>72</mn></mfrac><annotation encoding="application/x-tex">\dfrac{9}{72}</annotation></semantics></math></li>
+</ul>
+<p>We can also draw more interesting statistics from this by combing
+through the terms. For example, the question “what are the chances of
+rolling more than 3 hits and up to 1 self-hit” is just a matter of
+adding up the probabilities for every term with a factor of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>h</mi><mi>n</mi></msup><msup><mi>s</mi><mi>m</mi></msup></mrow><annotation encoding="application/x-tex">h^ns^m</annotation></semantics></math>
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>≥</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">n \geq 3</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mo>≤</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">m \leq 1</annotation></semantics></math>.</p>
+</body>
+</html>

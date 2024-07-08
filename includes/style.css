@@ -1,0 +1,9 @@
+aside {
+    width: 80%;
+    border-style: solid;
+    border-radius: 4px;
+    border: 1px solid #ffeb81;
+    font-style: italic;
+    padding: 15px;
+    margin: 15px;
+}
